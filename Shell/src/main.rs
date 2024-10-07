@@ -12,7 +12,6 @@ fn main(){
     }
 }
 
-
 fn run_process(vars: &Vec<String> , command :&str ) -> Result< () , () > {
     Ok(())
 }
