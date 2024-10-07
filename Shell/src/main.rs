@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process::Command;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
 
@@ -18,9 +19,22 @@ fn main(){
 }
 
 fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , () > {
+    let command : Vec<&str> = commnad.split(" ").collect();
     let bin = find_binary(commnad, &vars["PATH"]);
-    println!("{:?}" , bin);
-    panic!();
+
+    match  unsafe { libc::fork()} {
+        -1 => {
+            panic!("failed to start child process");
+        }
+        0 => {
+             unsafe {};
+        }
+        child_pid =>{
+            println!( "hello chid is {child_pid} ");
+        }        
+    }
+    println!("{:?}", bin);
+    std::process::exit(0);
 }
 
 
