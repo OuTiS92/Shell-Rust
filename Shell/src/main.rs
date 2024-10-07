@@ -6,24 +6,21 @@ use libc::ENETUNREACH;
 
 fn main(){
 
-    let raw_vars : Vec<String> = std::env::args().collect(); 
-    let var: HashMap<String,String> = raw_vars.into_iter().map(|v| {
-        let mut parts = v.split("=");
-        let key = parts.next().unwrap();
-        let val=parts.next().map(|v| v.to_owned()).unwrap_or(String::new());
-        (key.to_owned(),val)
-    }).collect();
-    
+    let vars  = std::env::vars().into_iter().collect(); 
+    dbg!(&vars);
+
     loop {
         let mut line = String::new();
         io::stdin().read_line(&mut line).unwrap();
         let line = line.trim();
-        println!( "{}" , line);
+        run_process(&vars, &line).unwrap();
     }
 }
 
-fn run_process(vars: &Vec<String> , command :&str ) -> Result< () , () > {
-    Ok(())
+fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , () > {
+    let bin = find_binary(commnad, &vars["PATH"]);
+    println!("{:?}" , bin);
+    panic!();
 }
 
 
