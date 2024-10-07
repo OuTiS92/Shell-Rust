@@ -1,5 +1,7 @@
 use std::{fmt::Error, io, path::PathBuf};
-use std::path::Path;
+use std::path::{self, Path};
+
+use libc::ENETUNREACH;
 
 fn main(){
 
@@ -17,7 +19,7 @@ fn run_process(vars: &Vec<String> , command :&str ) -> Result< () , () > {
 }
 
 
-fn find_binary(commnad: &str) -> Result< PathBuf ,  std::io::Error> {
+fn find_binary(commnad: &str , path: &str) -> Result< PathBuf ,  std::io::Error> {
     fn search (command :&str , path:&Path )-> Result<() , std::io::Error> {
         for entry in std::fs::read_dir(path)? {
             if let Ok(entry) = entry{
@@ -37,7 +39,20 @@ fn find_binary(commnad: &str) -> Result< PathBuf ,  std::io::Error> {
 
         }
         Err(std::io::ErrorKind::NotFound.into())
-    };
-    todo!()
+    }
+    if let Ok(mut dir) = std::env::current_dir(){
+        if let Ok(()) = search(commnad, &dir){
+            dir.push(commnad);
+            return  Ok(dir);
+        }
+    }
+    for entry in path.split(":"){
+        let mut path = PathBuf::from(entry);
+        if let Ok(()) = search(commnad, &path){
+            path.push(commnad);
+            return  Ok(path);
+        }
+    }
+    Err(std::io::ErrorKind::NotFound.into())
 }
  
