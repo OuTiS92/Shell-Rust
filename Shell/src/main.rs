@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
 
@@ -5,7 +6,14 @@ use libc::ENETUNREACH;
 
 fn main(){
 
-    let vars : Vec<String> = std::env::args().collect(); 
+    let raw_vars : Vec<String> = std::env::args().collect(); 
+    let var: HashMap<String,String> = raw_vars.into_iter().map(|v| {
+        let mut parts = v.split("=");
+        let key = parts.next().unwrap();
+        let val=parts.next().map(|v| v.to_owned()).unwrap_or(String::new());
+        (key.to_owned(),val)
+    }).collect();
+    
     loop {
         let mut line = String::new();
         io::stdin().read_line(&mut line).unwrap();
