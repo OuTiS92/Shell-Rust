@@ -4,7 +4,7 @@ use std::process::Command;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
 
-use libc::{c_char, ENETUNREACH};
+use libc::{c_char, CS, ENETUNREACH};
 
 fn main(){
 
@@ -34,13 +34,18 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
             panic!("failed to start child process");
         } 
         0 => {
-            let pathname = CString::new(bin.to_str().unwrap()).unwrap();
+            let pathname = CString::new(bin.to_str().expect("only utf8")).unwrap();
             let argv_owned : Vec<CString> = command.iter().map(|p| CString::new(*p).unwrap()).collect();
             let argv : Vec <*const c_char > = argv_owned.iter().map(|o| o.as_ptr()).collect();
             let argv: *const *const c_char = argv.as_ptr();
             
             
-            let envp_owned : Vec<CString> = command.iter().map(|p| CString::new(*p).unwrap()).collect();
+            let envp_owned : Vec<CString> = vars.iter().map(|(k,v)| {
+                let mut both= k.clone();
+                both.push_str("=");
+                both.push_str(&v);
+                CString::new(both).expect("null byte not allowed in env  string")
+            }.collect();
             let envp : Vec <*const c_char > = envp_owned.iter().map(|o| o.as_ptr()).collect();
             let envp: *const *const c_char = envp.as_ptr();
             
