@@ -27,19 +27,26 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
             println!("Failed to find {}" , command[0]);
             return Err(());
         }
-    };
-
+    }; 
     use std::os::raw::c_char;
     match  unsafe { libc::fork()} {
         -1 => {
             panic!("failed to start child process");
-        }
+        } 
         0 => {
-            let pathname = &bin;
+            let pathname = CString::new(bin.to_str().unwrap()).unwrap();
             let argv_owned : Vec<CString> = command.iter().map(|p| CString::new(*p).unwrap()).collect();
             let argv : Vec <*const c_char > = argv_owned.iter().map(|o| o.as_ptr()).collect();
             let argv: *const *const c_char = argv.as_ptr();
-            unsafe {};
+            
+            
+            let envp_owned : Vec<CString> = command.iter().map(|p| CString::new(*p).unwrap()).collect();
+            let envp : Vec <*const c_char > = envp_owned.iter().map(|o| o.as_ptr()).collect();
+            let envp: *const *const c_char = envp.as_ptr();
+            
+            unsafe {
+                libc::execve(pathname.as_ptr(), argv, envp)
+            };
         }
         child_pid =>{
             println!( "hello chid is {child_pid} ");
