@@ -10,7 +10,7 @@ fn main(){
     let vars  = std::env::vars().into_iter().collect(); 
     loop {
         let mut stdout= io::stdout();
-        write!(stdout , ">").unwrap();
+        write!(stdout , "outis92 ~ ").unwrap();
         stdout.flush().unwrap();
 
         let mut line = String::new();
