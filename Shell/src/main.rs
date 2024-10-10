@@ -93,11 +93,12 @@ fn run_process(vars: &HashMap<String, String>, command: &str) -> Result<(), ()> 
             std::process::exit(0);
         }
         child_pid => {
-            println!("hello chid is {child_pid} ");
             let mut exit_code = 0;
-            let _code = unsafe {
-                libc::waitpid(child_pid, &mut exit_code, 0);
-            };
+            if unsafe {
+                libc::waitpid(child_pid, &mut exit_code, 0)} == -1 {
+                let err = std::io::Error::last_os_error();
+                panic!("Failed to wait {}" , err);
+            }
             if exit_code != 0 {
                 println!("Exit whith {}", exit_code);
             }
