@@ -36,7 +36,8 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
         0 => {
             let pathname = CString::new(bin.to_str().expect("only utf8")).unwrap();
             let argv_owned : Vec<CString> = command.iter().map(|p| CString::new(*p).unwrap()).collect();
-            let argv : Vec <*const c_char > = argv_owned.iter().map(|o| o.as_ptr()).collect();
+            let mut argv : Vec <*const c_char > = argv_owned.iter().map(|o| o.as_ptr()).collect();
+            argv.push(std::ptr::null());
             let argv: *const *const c_char = argv.as_ptr();
             
             
@@ -45,20 +46,28 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
                 both.push_str("=");
                 both.push_str(&v);
                 CString::new(both).expect("null byte not allowed in env  string")
-            }.collect();
-            let envp : Vec <*const c_char > = envp_owned.iter().map(|o| o.as_ptr()).collect();
-            let envp: *const *const c_char = envp.as_ptr();
+            })
+                .collect();
+            let mut envp : Vec <*const c_char > = envp_owned.iter().map(|o| o.as_ptr()).collect();
+            envp.push(std::ptr::null());
+            let  envp: *const *const c_char = envp.as_ptr();
             
-            unsafe {
+            let res = unsafe {
                 libc::execve(pathname.as_ptr(), argv, envp)
             };
+            let err = std::io::Error::last_os_error();
+            println!( "ERROR! {}" , err);
+            std::process::exit(0);
         }
         child_pid =>{
             println!( "hello chid is {child_pid} ");
-        }        
+            let code= unsafe {
+                libc::wait(child_pid);
+            };
+            Ok(())
+        }    
+            
     }
-    println!("{:?}", bin);
-    std::process::exit(0);
 }
 
 
