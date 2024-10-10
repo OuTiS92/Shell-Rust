@@ -19,8 +19,22 @@ fn main(){
     }
 }
 
+
+struct Command<'a> (Vec<&'a str>);
+
+
+impl <'a> Command<'a> {
+    pub fn new (command: &'a str) -> Self {
+        assert!(!command.is_empty() ,  "Command can not be empty! ");
+        Self(command.split(" ").collect())
+    }
+    pub fn bin_path(&self) -> &str{
+
+    }
+}
+
 fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , () > {
-    let command : Vec<&str> = commnad.split(" ").collect();
+   let command = Command::new(command);
     run_shell_internals(command);
     let bin =  match find_binary(command[0], &vars["PATH"]){
         Ok(b) => b , 
@@ -74,7 +88,7 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
 }
 
 
-fn run_shell_internals (command :&str){
+fn run_shell_internals (command :&Command){
 
 
 
@@ -83,8 +97,8 @@ fn run_shell_internals (command :&str){
 
 
 
-fn find_binary(commnad: &str , path: &str) -> Result< PathBuf ,  std::io::Error> {
-    fn search (command :&str , path:&Path )-> Result<() , std::io::Error> {
+fn find_binary(command :&Command, path: &str) -> Result< PathBuf ,  std::io::Error> {
+    fn search (command :&Command , path:&Path )-> Result<() , std::io::Error> {
         for entry in std::fs::read_dir(path)? {
             if let Ok(entry) = entry{
                 if let Ok(met) = entry.metadata(){
@@ -104,16 +118,17 @@ fn find_binary(commnad: &str , path: &str) -> Result< PathBuf ,  std::io::Error>
         }
         Err(std::io::ErrorKind::NotFound.into())
     }
+    let target = command.bin_path();
     if let Ok(mut dir) = std::env::current_dir(){
-        if let Ok(()) = search(commnad, &dir){
-            dir.push(commnad);
+        if let Ok(()) = search(target, &dir){
+            dir.push(target);
             return  Ok(dir);
         }
     }
     for entry in path.split(":"){
         let mut path = PathBuf::from(entry);
-        if let Ok(()) = search(commnad, &path){
-            path.push(commnad);
+        if let Ok(()) = search(target, &path){
+            path.push(target);
             return  Ok(path);
         }
     }
