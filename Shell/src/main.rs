@@ -21,7 +21,8 @@ fn main(){
 
 fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , () > {
     let command : Vec<&str> = commnad.split(" ").collect();
-    let bin =  match find_binary(commnad[0], &vars["PATH"]){
+    run_shell_internals(command);
+    let bin =  match find_binary(command[0], &vars["PATH"]){
         Ok(b) => b , 
         Err(err) => {
             println!("Failed to find {}" , command[0]);
@@ -61,14 +62,25 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
         }
         child_pid =>{
             println!( "hello chid is {child_pid} ");
+            let mut  exit_code=0;
             let code= unsafe {
-                libc::wait(child_pid);
+                libc::waitpid(child_pid , &mut exit_code , 0 );
             };
+            println!("Exit whith {}" , exit_code);
             Ok(())
         }    
             
     }
 }
+
+
+fn run_shell_internals (command :&str){
+
+
+
+}
+
+
 
 
 fn find_binary(commnad: &str , path: &str) -> Result< PathBuf ,  std::io::Error> {
