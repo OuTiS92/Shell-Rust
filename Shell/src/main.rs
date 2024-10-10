@@ -7,7 +7,7 @@ fn main() {
     let vars = std::env::vars().into_iter().collect();
     loop {
         let mut stdout = io::stdout();
-        write!(stdout, "\x1b[34mOuTiS92 ~\x1b[0m").unwrap();
+        write!(stdout, "\x1b[34mOuTiS92 ~\x1b[0m  ").unwrap();
         stdout.flush().unwrap();
 
         let mut line = String::new();
