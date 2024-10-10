@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::io::{Stdout, Write};
-// use std::process::Command;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
 use core::option::Iter;
 use libc::{c_char, CS, ENETUNREACH};
-// use std::fmt::Debug;
 fn main(){
 
     let vars  = std::env::vars().into_iter().collect(); 
