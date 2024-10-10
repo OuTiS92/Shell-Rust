@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::io::{Stdout, Write};
 // use std::process::Command;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
@@ -10,6 +11,10 @@ fn main(){
 
     let vars  = std::env::vars().into_iter().collect(); 
     loop {
+        let mut stdout= io::stdout();
+        write!(stdout , ">").unwrap();
+        stdout.flush().unwrap();
+
         let mut line = String::new();
         io::stdin().read_line(&mut line).unwrap();
         let line = line.trim();
@@ -99,7 +104,9 @@ fn run_process(vars: &HashMap<String,String> , command: &str) -> Result< () , ()
             let code= unsafe {
                 libc::waitpid(child_pid , &mut exit_code , 0 );
             };
+            if exit_code !=0 {
             println!("Exit whith {}" , exit_code);
+            }
             Ok(())
         }    
             
@@ -132,7 +139,8 @@ fn run_shell_internals (command :&Command) -> Result<(), ()>{
                     0 => {
                     }
                     _ =>{
-                        println!("Failed to cd  ");
+                        let err = std::io::Error::last_os_error();
+                        println!("Failed to cd {}" , err);
                     }
                 }
                 Ok(())
@@ -145,13 +153,13 @@ fn run_shell_internals (command :&Command) -> Result<(), ()>{
 }
 
 fn find_binary(command :&Command, path: &str) -> Result< PathBuf ,  std::io::Error> {
-    fn search (command :&Command , path:&Path )-> Result<() , std::io::Error> {
+    fn search (target :&str , path:&Path )-> Result<() , std::io::Error> {
         for entry in std::fs::read_dir(path)? {
             if let Ok(entry) = entry{
                 if let Ok(met) = entry.metadata(){
                     if met.is_file() || met.is_symlink() {
                         if let Some(name) = entry.path().file_name(){
-                            if name == command{
+                            if name == target{
                                 if met.is_symlink(){
                                     panic!("Running symlinks not supported");
                                 }
