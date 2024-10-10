@@ -9,8 +9,6 @@ use libc::{c_char, CS, ENETUNREACH};
 fn main(){
 
     let vars  = std::env::vars().into_iter().collect(); 
-    dbg!(&vars);
-
     loop {
         let mut line = String::new();
         io::stdin().read_line(&mut line).unwrap();
@@ -51,7 +49,12 @@ fn run_process(vars: &HashMap<String,String> , command: &str) -> Result< () , ()
         shell_exit();
     }
     let command = Command::new(command);
-    run_shell_internals(&command);
+    match run_shell_internals(&command)  {
+        Ok(()) => {
+            return  Ok(());
+        }   
+        Err(()) => {}
+    }
     let bin =  match find_binary(&command, &vars["PATH"]){
         Ok(b) => b , 
         Err(_err) => {
@@ -104,20 +107,40 @@ fn run_process(vars: &HashMap<String,String> , command: &str) -> Result< () , ()
 }
 
 
-fn run_shell_internals (command :&Command){
+fn run_shell_internals (command :&Command) -> Result<(), ()>{
     let bin = command.bin_path();
     match bin {
         "exit" => {
             shell_exit();
         }
         "cd" => {
+            let  path = command.0[1];
+            let  path = if !path.starts_with("/"){
+            let mut cwd =  std::env::current_dir().unwrap().to_str().expect("No Null bytes in cd please").to_owned();
+            cwd.push_str("/");
+            cwd.push_str(path);
+            println!( ">changing to {cwd}");
+            let a  = std::fs::canonicalize(cwd).unwrap();
+            CString::new(a.to_str().unwrap()).unwrap()
+
+            }
+            else{
+                CString::new(path).unwrap()
+            };
+            match unsafe {
+                libc::chdir(path.as_ptr()) }{
+                    0 => {
+                    }
+                    _ =>{
+                        println!("Failed to cd  ");
+                    }
+                }
+                Ok(())
+            }
+        "export" => { 
             unimplemented!()
         }
-        "export" => {
-            unimplemented!()
-        }
-        _ => 
-        {}
+        _ => Err(())
     }
 }
 
@@ -159,6 +182,6 @@ fn find_binary(command :&Command, path: &str) -> Result< PathBuf ,  std::io::Err
     Err(std::io::ErrorKind::NotFound.into())
 }
  
- fn shell_exit(){
+ fn shell_exit()-> !{
     std::process::exit(0);
  }
