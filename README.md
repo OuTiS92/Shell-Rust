@@ -4,6 +4,6 @@
 This code is not yet complete, both in terms of structure and optimization. It requires more time and effort to improve, and further work is still needed.
 
 
-video:
+video cargo run :
 
-[![asciicast](https://asciinema.org/a/4XyBzFJkTHTNejiBE57ji8IQn.svg)](https://asciinema.org/a/4XyBzFJkTHTNejiBE57ji8IQn)
+[![asciicast](https://asciinema.org/a/4Xwlb8KmoLQ2nFXJO0v2DQljn.svg)](https://asciinema.org/a/4Xwlb8KmoLQ2nFXJO0v2DQljn)
