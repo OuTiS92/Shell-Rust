@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::process::Command;
+// use std::process::Command;
 use std::{fmt::Error, io, path::PathBuf};
 use std::path::{self, Path};
-
+use core::option::Iter;
 use libc::{c_char, CS, ENETUNREACH};
-
+// use std::fmt::Debug;
 fn main(){
 
     let vars  = std::env::vars().into_iter().collect(); 
@@ -19,27 +19,43 @@ fn main(){
     }
 }
 
+#[derive(Clone, PartialEq, Eq,Debug )]
+struct  Command<'c> (Vec<&'c str>);
 
-struct Command<'a> (Vec<&'a str>);
 
-
-impl <'a> Command<'a> {
-    pub fn new (command: &'a str) -> Self {
+impl <'c> Command<'c> {
+    pub fn new (command: &'c str) -> Self {
         assert!(!command.is_empty() ,  "Command can not be empty! ");
         Self(command.split(" ").collect())
     }
-    pub fn bin_path(&self) -> &str{
-
+    pub fn bin_path(&self) -> &str{ 
+        self.0[0]
+    }
+    pub fn iter(&self) -> std::slice::Iter<'_, &str>{
+        self.0.iter()
     }
 }
+ 
+ impl <'c> std::fmt::Display  for Command <'c>{
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+         for p in &self.0 {
+            f.write_fmt(format_args!("{}" , p))?;
+            f.write_str(", ")?;
+         }
+         Ok(())
+     }
+ }
 
-fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , () > {
-   let command = Command::new(command);
-    run_shell_internals(command);
-    let bin =  match find_binary(command[0], &vars["PATH"]){
+fn run_process(vars: &HashMap<String,String> , command: &str) -> Result< () , () > {
+    if command.is_empty(){
+        shell_exit();
+    }
+    let command = Command::new(command);
+    run_shell_internals(&command);
+    let bin =  match find_binary(&command, &vars["PATH"]){
         Ok(b) => b , 
-        Err(err) => {
-            println!("Failed to find {}" , command[0]);
+        Err(_err) => {
+            println!("Failed to find {}" , command);
             return Err(());
         }
     }; 
@@ -89,13 +105,21 @@ fn run_process(vars: &HashMap<String,String> , commnad: &str) -> Result< () , ()
 
 
 fn run_shell_internals (command :&Command){
-
-
-
+    let bin = command.bin_path();
+    match bin {
+        "exit" => {
+            shell_exit();
+        }
+        "cd" => {
+            unimplemented!()
+        }
+        "export" => {
+            unimplemented!()
+        }
+        _ => 
+        {}
+    }
 }
-
-
-
 
 fn find_binary(command :&Command, path: &str) -> Result< PathBuf ,  std::io::Error> {
     fn search (command :&Command , path:&Path )-> Result<() , std::io::Error> {
@@ -135,3 +159,6 @@ fn find_binary(command :&Command, path: &str) -> Result< PathBuf ,  std::io::Err
     Err(std::io::ErrorKind::NotFound.into())
 }
  
+ fn shell_exit(){
+    std::process::exit(0);
+ }
